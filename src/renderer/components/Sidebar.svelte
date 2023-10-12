@@ -2,7 +2,7 @@
   import { getContext } from 'svelte'
   import { alID } from '@/modules/anilist.js'
   import { media } from '../views/Player/MediaHandler.svelte'
-  import { platformMap, set } from '../views/Settings.svelte'
+  import { canonicPlatform, set } from '../views/Settings.svelte'
   import { toast } from 'svelte-sonner'
   import { click } from '@/modules/click.js'
   import { logout } from './Logout.svelte'
@@ -15,7 +15,7 @@
           $logout = true
         } else {
           window.IPC.emit('open', 'https://anilist.co/api/v2/oauth/authorize?client_id=4254&response_type=token') // Change redirect_url to miru://auth
-          if (platformMap[window.version.platform] === 'Linux') {
+          if (canonicPlatform() === 'Linux') {
             toast('Support Notification', {
               description: "If your linux distribution doesn't support custom protocol handlers, you can simply paste the full URL into the app.",
               duration: 300000

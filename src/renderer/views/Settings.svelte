@@ -25,15 +25,19 @@
     alToken = data
     location.reload()
   }
-  export const platformMap = {
-    aix: 'Aix',
-    darwin: 'MacOS',
-    freebsd: 'Linux',
-    linux: 'Linux',
-    openbsd: 'Linux',
-    sunos: 'SunOS',
-    win32: 'Windows'
+  export function canonicPlatform() {
+    return {
+      aix: 'Aix',
+      darwin: 'MacOS',
+      freebsd: 'Linux',
+      linux: 'Linux',
+      openbsd: 'Linux',
+      sunos: 'SunOS',
+      win32: 'Windows'
+    }[window.version.platform]
   }
+
+
   let version = '1.0.0'
   window.IPC.on('version', data => (version = data))
   window.IPC.emit('version')
@@ -46,6 +50,12 @@
         description: 'A new version of Miru is available. Downloading!'
       })
     }
+  })
+  window.IPC.on('update-platform-unsupported', () => {
+    toast.info('Auto Updater', {
+      description: `Automatic updates disabled for ${canonicPlatform()}.`,
+      duration: 2000
+    })
   })
   window.IPC.on('update-downloaded', () => {
     toast.success('Auto Updater', {
@@ -203,7 +213,7 @@
       </button>
       <p class='text-muted px-20 py-10 m-0'>Restart may be required for some settings to take effect.</p>
       <p class='text-muted px-20 pb-10 m-0'>If you don't know what shit does, use default settings.</p>
-      <p class='text-muted px-20 m-0 mb-20'>v{version} {platformMap[window.version.platform]} {window.version.arch}</p>
+      <p class='text-muted px-20 m-0 mb-20'>v{version} {canonicPlatform()} {window.version.arch}</p>
     </div>
     <div class='h-full w-full overflow-y-auto'>
       <Tab>
