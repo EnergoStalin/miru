@@ -43,7 +43,7 @@ function createWindow () {
   })
   new Discord(mainWindow)
   new Protocol(mainWindow)
-  new Updater(mainWindow)
+  new Updater().update(mainWindow)
   mainWindow.setMenuBarVisibility(false)
 
   mainWindow.webContents.session.webRequest.onHeadersReceived({ urls: ['https://sneedex.moe/api/public/nyaa', atob('aHR0cDovL2FuaW1ldG9zaG8ub3JnL3N0b3JhZ2UvdG9ycmVudC8q'), atob('aHR0cHM6Ly9ueWFhLnNpLyo=')] }, ({ responseHeaders }, fn) => {
