@@ -14,30 +14,10 @@ class DummyUpdater {
 }
 
 /**
- * @implements {Updater}
- */
-class NotifyPlatformUnsupported {
-  /**
-   * @param {import('electron').BrowserWindow} window
-   */
-  update(window) {
-    // Wait window to show
-    window.addListener('show', () => {
-      window.webContents.send('update-platform-unsupported', true)
-    })
-  }
-}
-
-/**
-* @type {Partial<Record<typeof process.platform, function(new:Updater)>>}
-* @description Declarative map for platform specific updater bindings
+* @type {function(new:Updater)}
+* @description Updater to use at the end
 */
-const platforms = {
- // Silently disable updates on linux like OS
- 'linux': DummyUpdater,
- 'freebsd': DummyUpdater,
- 'openbsd': DummyUpdater,
-}
+let updater = DummyUpdater
 
 // Try import electron updater if builded with it
 try {
@@ -76,15 +56,31 @@ class ElectronUpdater extends Updater {
   }
 }
 
-// Enable updates on electron supported platforms https://www.electronjs.org/docs/latest/api/auto-updater#platform-notices
-platforms['win32'] = ElectronUpdater;
-platforms['darwin'] = ElectronUpdater;
+updater = ElectronUpdater
 
 } catch {
-  // If builded without electron-updater
+  console.log('Built without electron-updater')
+}
+
+/**
+ * @returns {boolean} when enable updater or not
+ * @description enabled if AppIamge or current platform not linux like and unset DISABLE_MIRU_UPDATER.
+ */
+function isEnabled() {
+  /**
+   * @type {typeof process.platform[]}
+   */
+  const linuxLike = [
+    'linux',
+    'freebsd',
+    'openbsd'
+  ]
+
+  return !!process.env.APPIMAGE || !linuxLike.includes(process.platform) && !process.env.DISABLE_MIRU_UPDATER
 }
 
 /**
  * @type {function(new:Updater)}
+ * @description If updater disabled always return DummyUpdater otherwise return ElectonUpdater if built with electron-updater support
  */
-export default platforms[process.platform] ?? NotifyPlatformUnsupported
+export default isEnabled() ? updater : DummyUpdater
