@@ -51,12 +51,6 @@
       })
     }
   })
-  window.IPC.on('update-platform-unsupported', () => {
-    toast.info('Auto Updater', {
-      description: `Automatic updates disabled for ${canonicPlatform()}.`,
-      duration: 2000
-    })
-  })
   window.IPC.on('update-downloaded', () => {
     toast.success('Auto Updater', {
       description: 'A new version of Miru has downloaded. You can restart to update!'
