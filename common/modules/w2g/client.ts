@@ -1,7 +1,7 @@
 import P2PT, { type Peer } from 'p2pt'
 import { generateRandomHexCode } from '../util.js'
 import { alID } from '../anilist.js'
-import { MediaIndexEvent, SessionInitEvent, PlayerStateEvent, MagnetLinkEvent } from './events.js'
+import { MediaIndexEvent, SessionInitEvent, PlayerStateEvent, MagnetLinkEvent, type EventData, SyncEventBase, type MsgData } from './events'
 import { add } from '../torrent.js'
 import { W2GSession } from './session'
 
@@ -34,24 +34,15 @@ export class W2GClient {
     this.#p2pt.start()
   }
 
-  /**
-   * @param {import('./events.js').EventData<import('./events.js').MagnetLinkEvent>} magnet
-   */
-  onMagnetLink (magnet) {
+  onMagnetLink (magnet: EventData<MagnetLinkEvent>) {
     this.#emit(new MagnetLinkEvent(magnet))
   }
 
-  /**
-   * @param {number} index
-   */
-  onMediaIndexChanged (index) {
+  onMediaIndexChanged (index: number) {
     this.#emit(new MediaIndexEvent(index))
   }
 
-  /**
-   * @param {import('./events').EventData<PlayerStateEvent>} state
-   */
-  onPlayerStateChanged (state) {
+  onPlayerStateChanged (state: EventData<PlayerStateEvent>) {
     this.#emit(new PlayerStateEvent(state))
   }
 
@@ -61,11 +52,7 @@ export class W2GClient {
     this.#p2pt.on('peerclose', this.#onPeerclose.bind(this))
   }
 
-  /**
-   * @param {import('p2pt').Peer} peer
-   * @param {import('./events.js').SyncEventBase} event
-   */
-  #sendEvent (peer, event) {
+  #sendEvent (peer: Peer, event: SyncEventBase) {
     console.log('out W2GMsg', event)
     this.#p2pt?.send(peer, JSON.stringify(event))
   }
@@ -73,13 +60,13 @@ export class W2GClient {
   /**
    * Should be called only on 'peerconnect'
    */
-  #sendInitialSessionState (peer, state) {
+  #sendInitialSessionState (peer: Peer, state: W2GSession) {
     this.#sendEvent(peer, new MagnetLinkEvent(state.magnet))
     this.#sendEvent(peer, new MediaIndexEvent(state.index))
     this.#sendEvent(peer, new PlayerStateEvent(state.player))
   }
 
-  async #onPeerconnect (peer) {
+  async #onPeerconnect (peer: Peer) {
     const user = (await alID)?.data?.Viewer || {}
 
     this.#sendEvent(peer, new SessionInitEvent(user.id || generateRandomHexCode(16), user))
@@ -87,11 +74,7 @@ export class W2GClient {
     if (this.#session.isHost) this.#sendInitialSessionState(peer, this.#session)
   }
 
-  /**
-   * @param {import('p2pt').Peer} peer
-   * @param {import('./events.js').MsgData} data
-   */
-  #onMsg (peer, data) {
+  #onMsg (peer: Peer, data: MsgData) {
     data = typeof data === 'string' ? JSON.parse(data) : data
 
     console.log('in W2GMsg', data)
@@ -131,10 +114,7 @@ export class W2GClient {
     this.#session.onPeerListUpdated?.(this.#session.peers)
   }
 
-  /**
-   * @param {import('./events.js').SyncEventBase} event
-   */
-  #emit (event) {
+  #emit (event: SyncEventBase) {
     if (!this.#p2pt) return
 
     // @ts-ignore

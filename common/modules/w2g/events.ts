@@ -1,76 +1,30 @@
-/**
- * @template T
- * @typedef {Omit<T, 'type'>} EventData<T>
- */
-
-/**
- * Doomed to syntax highlight to fail https://github.com/microsoft/TypeScript/issues/16179
- * @typedef {
-    | { type: SessionInitEvent.type } & SessionInitEvent
-    | { type: MagnetLinkEvent.type } & MagnetLinkEvent
-    | { type: MediaIndexEvent.type } & MediaIndexEvent
-    | { type: PlayerStateEvent.type } & PlayerStateEvent
-  } MsgData
- */
+export type EventData<T> = Omit<T, 'type'>
 
 export class SyncEventBase {
-  /**
-   * @type {String}
-   */
-  type
+  type: string
 
-  /**
-   * @param {String} type
-   */
-  constructor (type) {
+  constructor (type: string) {
     this.type = type
   }
 }
 
 export class SessionInitEvent extends SyncEventBase {
-  /**
-   * @type {'init'}
-   */
-  static type = 'init'
+  static type: 'init' = 'init'
 
-  /**
-   * @type {string | number}
-   */
-  id
+  id: string | number
+  name: string | undefined
 
-  /**
-   * @type {string | undefined}
-   */
-  name
+  mediaListOptions: {
+    animeList: {
+      customLists: string[]
+    }
+  } | undefined
 
-  /**
-   * @typedef {Object} AnimeList
-   * @property {string[]} customLists
-   *
-   * @typedef {Object} MediaListOptions
-   * @property {AnimeList} animeList
-   */
+  avatar: {
+    medium: string
+  }
 
-  /**
-   * @type {MediaListOptions | undefined}
-   */
-  mediaListOptions
-
-  /**
-   * @typedef {Object} Avatar
-   * @property {string} medium
-   */
-
-  /**
-   * @type {Avatar | undefined}
-   */
-  avatar
-
-  /**
-   * @param {string} id
-   * @param {Partial<EventData<SessionInitEvent>>} user
-   */
-  constructor (id, user) {
+  constructor (id: string, user: Partial<EventData<SessionInitEvent>>) {
     super(SessionInitEvent.type)
     this.id = user?.id ?? id
     this.name = user.name
@@ -80,25 +34,12 @@ export class SessionInitEvent extends SyncEventBase {
 }
 
 export class MagnetLinkEvent extends SyncEventBase {
-  /**
-   * @type {'magnet'}
-   */
-  static type = 'magnet'
+  static type: 'magnet' = 'magnet'
 
-  /**
-   * @type {unknown}
-   */
-  magnet
-  /**
-   * @type {string}
-   */
-  hash
+  magnet: unknown
+  hash: string
 
-  /**
-   *
-   * @param {EventData<MagnetLinkEvent>} magnet
-   */
-  constructor (magnet) {
+  constructor (magnet: EventData<MagnetLinkEvent>) {
     super(MagnetLinkEvent.type)
     this.hash = magnet.hash
     this.magnet = magnet.magnet
@@ -106,46 +47,31 @@ export class MagnetLinkEvent extends SyncEventBase {
 }
 
 export class MediaIndexEvent extends SyncEventBase {
-  /**
-   * @type {'index'}
-   */
-  static type = 'index'
+  static type: 'index' = 'index'
 
-  /**
-   * @type {number}
-   */
-  index
+  index: number
 
-  /**
-   * @param {number} index
-   */
-  constructor (index) {
+  constructor (index: number) {
     super(MediaIndexEvent.type)
     this.index = index
   }
 }
 
 export class PlayerStateEvent extends SyncEventBase {
-  /**
-   * @type {'player'}
-   */
-  static type = 'player'
+  static type: 'player' = 'player'
 
-  /**
-   * @type {number}
-   */
-  time
-  /**
-   * @type {boolean}
-   */
-  paused
+  time: number
+  paused: boolean
 
-  /**
-   * @param {EventData<PlayerStateEvent>} state
-   */
-  constructor (state) {
+  constructor (state: EventData<PlayerStateEvent>) {
     super(PlayerStateEvent.type)
     this.time = state.time
     this.paused = state.paused
   }
 }
+
+export type MsgData =
+  | { type: typeof PlayerStateEvent.type } & PlayerStateEvent
+  | { type: typeof MediaIndexEvent.type } & MediaIndexEvent
+  | { type: typeof MagnetLinkEvent.type } & MagnetLinkEvent
+  | { type: typeof SessionInitEvent.type } & SessionInitEvent
