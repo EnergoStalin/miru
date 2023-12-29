@@ -25,6 +25,7 @@
     "webpack-merge": "^5.10.0"
   },
   "dependencies": {
+    "animelayerjs": "^1.1.0",
     "utp-native": "^2.5.3"
   },
   "standard": {

@@ -6,6 +6,7 @@ import { alRequest } from '../anilist.js'
 import { client } from '@/modules/torrent.js'
 import mapBestSneedexReleases from './sneedex.js'
 import getSeedexBests from './seadex.js'
+import IPC from '../ipc.js'
 
 export default async function ({ media, episode }) {
   const json = await getAniDBFromAL(media)
@@ -26,7 +27,7 @@ export default async function ({ media, episode }) {
   const parseObjects = await anitomyscript(deduped.map(({ title }) => title))
   for (const i in parseObjects) deduped[i].parseObject = parseObjects[i]
 
-  const withBests = dedupeEntries([...await getSeedexBests(media), ...mapBestSneedexReleases(deduped)])
+  const withBests = dedupeEntries([...await getSeedexBests(media), ...mapBestSneedexReleases(deduped), ...await IPC.invoke('al:search', { title: media.title.romaji, episode, quality: '1920x1080' })])
 
   return updatePeerCounts(withBests)
 }

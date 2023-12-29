@@ -5,6 +5,9 @@ contextBridge.exposeInMainWorld('IPC', {
   emit: (event, data) => {
     ipcRenderer.send(event, data)
   },
+  invoke: (event, data) => {
+    return ipcRenderer.invoke(event, data)
+  },
   on: (event, callback) => {
     ipcRenderer.on(event, (event, ...args) => callback(...args))
   },

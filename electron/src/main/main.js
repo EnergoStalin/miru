@@ -5,6 +5,7 @@ import Discord from './discord.js'
 import Updater from './updater.js'
 import Protocol from './protocol.js'
 import { development } from './util.js'
+import { registerAnimeLayerApi } from './animelayer.js'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -106,6 +107,8 @@ function createWindow () {
     webtorrentWindow.webContents.postMessage('port', null, [port1])
     sender.postMessage('port', null, [port2])
   })
+
+  registerAnimeLayerApi()
 }
 
 app.on('ready', createWindow)
