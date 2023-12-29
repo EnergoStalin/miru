@@ -3,7 +3,7 @@
   import { resolveFileMedia } from '@/modules/anime.js'
   import { videoRx } from '@/modules/util.js'
   import { tick } from 'svelte'
-  import { state } from '../WatchTogether/WatchTogether.svelte'
+  import { sessionCode } from '../WatchTogether/WatchTogether.svelte'
   import IPC from '@/modules/ipc.js'
 
   const episodeRx = /Episode (\d+) - (.*)/
@@ -201,7 +201,7 @@
   }
 
   function setDiscordRPC (np = nowPlaying.value) {
-    const w2g = state.value
+    const w2g = sessionCode.value
     const details = [np.title, np.episodeTitle].filter(i => i).join(' - ') || undefined
     const activity = {
       details,
@@ -242,7 +242,7 @@
     }
     IPC.emit('discord', { activity })
   }
-  state.subscribe(() => {
+  sessionCode.subscribe(() => {
     setDiscordRPC()
     return noop
   })
