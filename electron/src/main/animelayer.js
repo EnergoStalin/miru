@@ -8,10 +8,14 @@ const credentials = JSON.parse(readFileSync(join(process.env.HOME, '.animelayer.
 
 const animelayer = new AnimeLayer(new Credentials(credentials.login, credentials.password))
 
+function normalizeTitle (name) {
+  return name.replace('-', ' ')
+}
+
 export function registerAnimeLayerApi () {
   ipcMain.handle('al:search', async (_, { title, episode, quality }) => {
     console.log(`Searching ${title} ${quality}`)
-    const promise = animelayer.searchWithMagnet(title, { quality, episode })
+    const promise = animelayer.searchWithMagnet(normalizeTitle(title), { quality, episode })
     try {
       await Promise.race([
         promise,
@@ -28,7 +32,7 @@ export function registerAnimeLayerApi () {
     for (const entry of list) {
       mapped.push({
         id: entry.hash,
-        title: entry.title,
+        title: `[${entry.uploader}] ${entry.title}`,
         link: entry.magnetUri,
         seeders: entry.seed,
         leechers: entry.leech,
