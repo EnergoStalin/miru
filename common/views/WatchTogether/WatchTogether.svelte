@@ -1,11 +1,13 @@
-<script context='module'>
+<script context='module' lang="ts">
+  //@ts-ignore
   import { writable } from 'simple-store-svelte'
   import { client } from '@/modules/torrent.js'
   import { toast } from 'svelte-sonner'
   import { page } from '@/App.svelte'
   import { click } from '@/modules/click.js'
-  import { W2GSession } from '@/modules/w2g/session.js'
-  import { BidirectionalFilteredEventBus } from '@/modules/w2g/filter.js'
+  import { W2GSession } from '@/modules/w2g/session'
+  import { BidirectionalFilteredEventBus } from '@/modules/w2g/filter'
+  import { type EventData, PlayerStateEvent } from '@/modules/w2g/events';
   import IPC from '@/modules/ipc.js'
   import 'browser-event-target-emitter'
 
@@ -17,13 +19,13 @@
 
   const session = new W2GSession()
 
-  /**
-   * @type {BidirectionalFilteredEventBus<
-   *  import('@/modules/w2g/events.js').EventData<import('@/modules/w2g/events.js').PlayerStateEvent>,
-   *  import('@/modules/w2g/events.js').EventData<import('@/modules/w2g/events.js').PlayerStateEvent>
-   * >}
-   */
-  const bus = new BidirectionalFilteredEventBus(
+  const bus: BidirectionalFilteredEventBus<
+    EventData<PlayerStateEvent>,
+    EventData<PlayerStateEvent>
+  > = new BidirectionalFilteredEventBus<
+    EventData<PlayerStateEvent>,
+    EventData<PlayerStateEvent>
+  >(
     (state) => w2gEmitter.emit('playerupdate', state),
     (detail) => session.localPlayerStateChanged(detail),
     undefined,
@@ -48,14 +50,14 @@
     bus.reinit()
   }
 
-  function joinLobby (code) {
+  function joinLobby (code: string | undefined) {
     cleanup()
     state.set(session.createClient(code))
 
     if (!code) invite()
   }
 
-  IPC.on('w2glink', (link) => {
+  IPC.on('w2glink', (link: string) => {
     joinLobby(link)
     page.set('watchtogether')
   })
@@ -70,13 +72,13 @@
   }
 </script>
 
-<script>
+<script lang="ts">
   import Lobby from './Lobby.svelte'
 
-  let joinText
+  let joinText: string
 
   const inviteRx = /([A-z0-9]{16})/i
-  function checkInvite (invite) {
+  function checkInvite (invite: string) {
     if (!invite) return
     const match = invite?.match(inviteRx)?.[1]
     if (!match) return
@@ -95,7 +97,7 @@
     <div class='d-flex flex-row flex-wrap justify-content-center align-items-center h-full mb-20 pb-20 root'>
       <div class='card d-flex flex-column align-items-center w-300 h-300 justify-content-end'>
         <span class='font-size-80 material-symbols-outlined d-flex align-items-center h-full'>add</span>
-        <button class='btn btn-primary btn-lg mt-10 btn-block' type='button' use:click={() => joinLobby()}>Create Lobby</button>
+        <button class='btn btn-primary btn-lg mt-10 btn-block' type='button' use:click={() => joinLobby(undefined)}>Create Lobby</button>
       </div>
       <div class='card d-flex flex-column align-items-center w-300 h-300 justify-content-end'>
         <span class='font-size-80 material-symbols-outlined d-flex align-items-center h-full'>group_add</span>

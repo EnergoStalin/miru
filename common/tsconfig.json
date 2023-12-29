@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "outDir": "anything here cause it doesent matter but we still need emit on",
+    "paths": {
+      "@/*": ["./*"],
+    },
+
+    "noImplicitAny": true,
+    "module": "es6",
+    "target": "ESNext",
+    "allowJs": true,
+    "moduleResolution": "Bundler"
+  }
+}

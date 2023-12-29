@@ -1,8 +1,11 @@
-import { W2GClient } from './client.js'
+import type { Peer } from 'p2pt'
+import { W2GClient } from './client'
+import type { EventData, MagnetLinkEvent, PlayerStateEvent } from './events'
 
-/**
- * @typedef {Record<string, {user: any, peer: import('p2pt').Peer<any>}>} PeerList
- */
+type PeerList = Record<string, {
+  user: any,
+  peer: Peer
+}>
 
 export class W2GSession {
   /**
@@ -80,7 +83,7 @@ export class W2GSession {
    * @param {string | null} code initial code if null new generated and returned
    * @returns p2p code
    */
-  createClient (code) {
+  createClient (code: string | null): string {
     this.#client = new W2GClient(this, code)
 
     return this.#client.code
@@ -100,21 +103,19 @@ export class W2GSession {
 
   /**
    * Fires when peer object updated. On 'peerconnect' and 'peerclose' events of underlying client.
-   * @type {(peers: PeerList) => void | null}
   */
-  onPeerListUpdated
+  onPeerListUpdated: (peers: PeerList) => void | null
 
   /**
    * Fires when 'index' message received from another peer.
-   * @type {(index: number) => void | null}
   */
-  onMediaIndexUpdated
+  onMediaIndexUpdated: (index: number) => void | null
 
   /**
    * Fires when 'player' message received from another peer.
    * @type {(state: import('./events.js').EventData<import('./events.js').PlayerStateEvent>) => void | null}
   */
-  onPlayerStateUpdated
+  onPlayerStateUpdated: (state: EventData<PlayerStateEvent>) => void | null
 
   /**
    * Should be called when client picking torrent
@@ -132,7 +133,6 @@ export class W2GSession {
 
   /**
    * Should be called when media index changed locally
-   * @param {number} index
    */
   localMediaIndexChanged (index) {
     this.#index = index

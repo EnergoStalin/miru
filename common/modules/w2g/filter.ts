@@ -1,16 +1,9 @@
-/**
- * @template {object} InEvent
- * @template {object} OutEvent
- */
-export class BidirectionalFilteredEventBus {
-  /**
-   * @type {string}
-   */
-  #lastInEvent
-  /**
-   * @type {string}
-   */
-  #lastOutEvent
+type Filter<T> = (event: T, lastEvent: T) => boolean
+type Sink<T> = (e: T) => unknown
+
+export class BidirectionalFilteredEventBus<InEvent, OutEvent> {
+  #lastInEvent: string
+  #lastOutEvent: string
 
   get isFirstInFired () {
     return this.#lastInEvent !== '{}'
@@ -26,23 +19,12 @@ export class BidirectionalFilteredEventBus {
   #inSink
   #outSink
 
-  /**
-   * @template T
-   * @typedef {(event: T, lastEvent: T) => boolean} Filter
-   */
-
-  /**
-   * @typedef {(InEvent) => any} InSink
-   * @typedef {(OutEvent) => any} OutSink
-   */
-
-  /**
-   * @param {InSink} inSink
-   * @param {OutSink} outSink
-   * @param {Filter<InEvent>} inFilter
-   * @param {Filter<OutEvent>} outFilter
-   */
-  constructor (inSink, outSink, inFilter, outFilter) {
+  constructor (
+    inSink: Sink<InEvent>,
+    outSink: Sink<OutEvent>,
+    inFilter: Filter<InEvent>,
+    outFilter: Filter<OutEvent>
+  ) {
     this.#inSink = inSink
     this.#outSink = outSink
     this.#inFilter = inFilter
@@ -50,18 +32,21 @@ export class BidirectionalFilteredEventBus {
     this.reinit()
   }
 
-  /**
-   * @param {InEvent | OutEvent} event
-   * @param {string} hash
-   * @param {string} lastEvent
-   * @param {Filter<InEvent | OutEvent>} filter
-   * @returns
-   */
-  #drop (event, hash, lastEvent, filter) {
+  #drop (
+    event: InEvent | OutEvent,
+    hash: string,
+    lastEvent: string,
+    filter: Filter<InEvent | OutEvent>
+  ) {
     return filter?.(event, JSON.parse(lastEvent)) || hash === this.#lastOutEvent || hash === this.#lastInEvent
   }
 
-  #filter (event, lastEvent, sink, filter) {
+  #filter (
+    event: InEvent | OutEvent,
+    lastEvent: string,
+    sink: Sink<InEvent | OutEvent>,
+    filter: Filter<InEvent | OutEvent>
+  ) {
     const hash = JSON.stringify(event)
 
     if (this.#drop(event, hash, lastEvent, filter)) {
@@ -75,18 +60,12 @@ export class BidirectionalFilteredEventBus {
     return hash
   }
 
-  /**
-   * @param {InEvent} event
-   */
-  in (event) {
+  in (event: InEvent) {
     console.log('IN', event)
     this.#lastInEvent = this.#filter(event, this.#lastInEvent, this.#inSink, this.#inFilter)
   }
 
-  /**
-   * @param {OutEvent} event
-   */
-  out (event) {
+  out (event: OutEvent) {
     console.log('OUT', event)
     this.#lastOutEvent = this.#filter(event, this.#lastOutEvent, this.#outSink, this.#outFilter)
   }

@@ -1,8 +1,9 @@
-import P2PT from 'p2pt'
+import P2PT, { type Peer } from 'p2pt'
 import { generateRandomHexCode } from '../util.js'
 import { alID } from '../anilist.js'
 import { MediaIndexEvent, SessionInitEvent, PlayerStateEvent, MagnetLinkEvent } from './events.js'
 import { add } from '../torrent.js'
+import { W2GSession } from './session'
 
 export class W2GClient {
   static #announce = [
@@ -20,11 +21,7 @@ export class W2GClient {
     return this.#code
   }
 
-  /**
-   * @param {import('./session.js').W2GSession} session
-   * @param {string} code lobby code
-   */
-  constructor (session, code) {
+  constructor (session: W2GSession, code: string) {
     this.#session = session
     this.#session.isHost = !code
 
@@ -75,8 +72,6 @@ export class W2GClient {
 
   /**
    * Should be called only on 'peerconnect'
-   * @param {import('p2pt').Peer} peer
-   * @param {import('./session.js').W2GSession} state
    */
   #sendInitialSessionState (peer, state) {
     this.#sendEvent(peer, new MagnetLinkEvent(state.magnet))
@@ -131,7 +126,7 @@ export class W2GClient {
     }
   }
 
-  #onPeerclose (peer) {
+  #onPeerclose (peer: Peer) {
     delete this.#session.peers[peer.id]
     this.#session.onPeerListUpdated?.(this.#session.peers)
   }
@@ -142,6 +137,7 @@ export class W2GClient {
   #emit (event) {
     if (!this.#p2pt) return
 
+    // @ts-ignore
     for (const { peer } of Object.values(this.#session.peers)) {
       this.#sendEvent(peer, event)
     }

@@ -1,11 +1,23 @@
 const { join, resolve } = require('path')
 
+/**
+ * @type {any}
+ */
 const mode = process.env.NODE_ENV?.trim() || 'development'
 const isDev = mode === 'development'
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
+const sveltePreprocess = require('svelte-preprocess')
 
+/**
+ *
+ * @param {*} parentDir
+ * @param {*} alias
+ * @param {*} aliasFields
+ * @param {*} filename
+ * @returns {import('webpack').Configuration}
+ */
 module.exports = (parentDir, alias = {}, aliasFields = 'browser', filename = 'app') => ({
   devtool: 'source-map',
   entry: [join(__dirname, 'main.js')],
@@ -17,10 +29,17 @@ module.exports = (parentDir, alias = {}, aliasFields = 'browser', filename = 'ap
   module: {
     rules: [
       {
+        test: /\.ts$/,
+        use: {
+          loader: 'ts-loader'
+        }
+      },
+      {
         test: /\.svelte$/,
         use: {
           loader: 'svelte-loader',
           options: {
+            preprocess: sveltePreprocess(),
             compilerOptions: {
               dev: isDev
             },
@@ -59,7 +78,7 @@ module.exports = (parentDir, alias = {}, aliasFields = 'browser', filename = 'ap
       url: false,
       'bittorrent-tracker/lib/client/websocket-tracker.js': resolve('../node_modules/bittorrent-tracker/lib/client/websocket-tracker.js')
     },
-    extensions: ['.mjs', '.js', '.svelte']
+    extensions: ['.mjs', '.js', '.svelte', '.ts']
   },
   plugins: [
     new MiniCssExtractPlugin({

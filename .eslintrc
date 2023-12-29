@@ -25,6 +25,7 @@
       "ignorePackages",
       {
         "js": "always",
+        "ts": "always",
         "svelte": "always"
       }
    ]
@@ -49,6 +50,16 @@
         ],
         "svelte/shorthand-attribute": ["warn", { "prefer": "always" }],
         "svelte/spaced-html-comment": ["error", "always"]
+      }
+    },
+    {
+      "files": ["*.ts"],
+      "rules": {
+        "import/extensions": [
+          "error",
+          "never",
+          {"js": "always"}
+       ]
       }
     }
   ]
