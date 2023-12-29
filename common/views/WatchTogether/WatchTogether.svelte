@@ -8,25 +8,33 @@
   import { W2GSession } from '@/modules/w2g/session'
   import { BidirectionalFilteredEventBus } from '@/modules/w2g/filter'
   import { type EventData, PlayerStateEvent } from '@/modules/w2g/events';
+  import type { Emit, CustomEventTarget } from '@/modules/utils';
   import IPC from '@/modules/ipc.js'
   import 'browser-event-target-emitter'
 
-  export const w2gEmitter = new EventTarget()
+  type PlayerEmitter = CustomEventTarget<
+    & Emit<'PLAYER_UPDATE', EventData<PlayerStateEvent>>
+    & Emit<'INDEX_UPDATE', number>
+  >
+
+  const sink: PlayerEmitter = new EventTarget()
+  const sender: PlayerEmitter = new EventTarget()
+  export const event = {
+    sender: sender as Omit<PlayerEmitter, 'on' | 'once'>,
+    sink: sink as Omit<PlayerEmitter, 'dispatch' | 'emit'>
+  }
 
   const peers = writable({})
 
-  export const state = writable(false)
+  export const sessionCode = writable(false)
 
   const session = new W2GSession()
 
   const bus: BidirectionalFilteredEventBus<
     EventData<PlayerStateEvent>,
     EventData<PlayerStateEvent>
-  > = new BidirectionalFilteredEventBus<
-    EventData<PlayerStateEvent>,
-    EventData<PlayerStateEvent>
-  >(
-    (state) => w2gEmitter.emit('playerupdate', state),
+  > = new BidirectionalFilteredEventBus(
+    (state) => sink.emit('PLAYER_UPDATE', state),
     (detail) => session.localPlayerStateChanged(detail),
     undefined,
     // Dont send time 0 when non host
@@ -34,17 +42,17 @@
   )
   
   session.onPeerListUpdated = (p) => peers.update(() => p)
-  session.onMediaIndexUpdated = (i) => w2gEmitter.emit('setindex', i)
-  session.onPlayerStateUpdated = (state) => bus.in({time: state.time, paused: state.paused})
+  session.onMediaIndexUpdated = (i) => sink.emit('INDEX_UPDATE', i)
+  session.onPlayerStateUpdated = (state) => bus.in(state)
 
 
-  w2gEmitter.on('player', ({ detail }) => bus.out(detail))
+  sender.on('PLAYER_UPDATE', ({ detail }) => bus.out(detail))
 
-  w2gEmitter.on('index', ({ detail }) => session.localMediaIndexChanged(detail.index))
+  sender.on('INDEX_UPDATE', ({ detail }) => session.localMediaIndexChanged(detail))
   client.on('magnet', ({ detail }) => session.localMagnetLink(detail))
 
   function cleanup () {
-    state.set(false)
+    sessionCode.set(false)
     peers.set({})
     session.dispose()
     bus.reinit()
@@ -52,7 +60,7 @@
 
   function joinLobby (code: string | undefined) {
     cleanup()
-    state.set(session.createClient(code))
+    sessionCode.set(session.createClient(code))
 
     if (!code) invite()
   }
@@ -93,7 +101,7 @@
 
 <div class='d-flex h-full align-items-center flex-column content'>
   <div class='font-size-50 font-weight-bold pt-20 mt-20 root'>Watch Together</div>
-  {#if !$state}
+  {#if !$sessionCode}
     <div class='d-flex flex-row flex-wrap justify-content-center align-items-center h-full mb-20 pb-20 root'>
       <div class='card d-flex flex-column align-items-center w-300 h-300 justify-content-end'>
         <span class='font-size-80 material-symbols-outlined d-flex align-items-center h-full'>add</span>

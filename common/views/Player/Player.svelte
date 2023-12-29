@@ -12,19 +12,19 @@
   import { click } from '@/modules/click.js'
   import VideoDeband from 'video-deband'
 
-  import { w2gEmitter, state } from '../WatchTogether/WatchTogether.svelte'
+  import { event, sessionCode } from '../WatchTogether/WatchTogether.svelte'
   import Keybinds, { loadWithDefaults, condition } from 'svelte-keybinds'
   import { SUPPORTS } from '@/modules/support.js'
   import 'rvfc-polyfill'
 
   const emit = createEventDispatcher()
 
-  w2gEmitter.on('playerupdate', ({ detail }) => {
+  event.sink.on('PLAYER_UPDATE', ({ detail }) => {
     currentTime = detail.time
     paused = detail.paused
   })
 
-  w2gEmitter.on('setindex', ({ detail }) => {
+  event.sink.on('INDEX_UPDATE', ({ detail }) => {
     playFile(detail)
   })
 
@@ -40,9 +40,9 @@
    * @param {Event | undefined} e
    */
   function updatew2g () {
-    w2gEmitter.emit('player', {
+    event.sender.emit('PLAYER_UPDATE', {
       time: Math.floor(currentTime),
-      paused
+      paused: paused || buffering
     })
   }
 
@@ -262,7 +262,7 @@
     }
   })
   function tryPlayNext () {
-    if ($settings.playerAutoplay && !state.value) playNext()
+    if ($settings.playerAutoplay && !sessionCode.value) playNext()
   }
   function playNext () {
     if (hasNext) {
@@ -270,7 +270,7 @@
       if (index + 1 < videos.length) {
         const target = (index + 1) % videos.length
         handleCurrent(videos[target])
-        w2gEmitter.emit('index', { index: target })
+        event.sender.emit('INDEX_UPDATE', { index: target })
       } else if (media?.media?.nextAiringEpisode?.episode - 1 || media?.media?.episodes > media?.episode) {
         playAnime(media.media, media.episode + 1)
       }
@@ -281,7 +281,7 @@
       const index = videos.indexOf(current)
       if (index > 0) {
         handleCurrent(videos[index - 1])
-        w2gEmitter.emit('index', { index: index - 1 })
+        event.sender.emit('INDEX_UPDATE', { index: index - 1 })
       } else if (media?.episode > 1) {
         playAnime(media.media, media.episode - 1)
       }
@@ -641,12 +641,14 @@
       clearTimeout(bufferTimeout)
       bufferTimeout = null
       buffering = false
+      updatew2g()
     }
   }
 
   function showBuffering () {
     bufferTimeout = setTimeout(() => {
       buffering = true
+      updatew2g()
       resetImmerse()
     }, 150)
   }
