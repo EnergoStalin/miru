@@ -58,7 +58,10 @@
         "import/extensions": [
           "error",
           "never",
-          {"js": "always"}
+          {
+            "js": "always",
+            "svelte": "always"
+          }
        ]
       }
     }
