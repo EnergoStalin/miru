@@ -11,16 +11,18 @@ const animelayer = new AnimeLayer(new Credentials(credentials.login, credentials
 export function registerAnimeLayerApi () {
   ipcMain.handle('al:search', async (_, { title, episode, quality }) => {
     console.log(`Searching ${title} ${quality}`)
-    const list = await animelayer.search(title, quality)
+    const promise = animelayer.searchWithMagnet(title, { quality, episode })
     try {
       await Promise.race([
-        animelayer.searchWithMagnet(title, quality),
+        promise,
         sleep(5000)
       ])
     } catch (e) {
       console.error(e)
       throw e
     }
+
+    const list = await promise
 
     const mapped = []
     for (const entry of list) {
