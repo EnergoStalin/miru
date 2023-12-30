@@ -1,6 +1,5 @@
 import { AnimeLayer, Credentials } from 'animelayerjs'
 import { ipcMain } from 'electron'
-import { sleep } from 'common/modules/util'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
@@ -8,19 +7,40 @@ const credentials = JSON.parse(readFileSync(join(process.env.HOME, '.animelayer.
 
 const animelayer = new AnimeLayer(new Credentials(credentials.login, credentials.password))
 
+function timeouted (time) {
+  return new Promise((resolve, reject) => setTimeout(reject, time))
+}
+
 function normalizeTitle (name) {
   return name.replace('-', ' ')
+}
+
+async function searchWithTimeout (title, quality, episode, timeout) {
+  const promise = animelayer.searchWithMagnet(normalizeTitle(title), { quality, episode })
+  await Promise.race([
+    promise,
+    timeouted(5000)
+  ])
+
+  return promise
+}
+
+async function adaptiveSearch (title, quality) {
+  const list = await searchWithTimeout(title, quality, 1, 5000)
+  if (list.length) {
+    return list
+  }
+
+  return searchWithTimeout(title, quality, 0, 5000)
 }
 
 export function registerAnimeLayerApi () {
   ipcMain.handle('al:search', async (_, { title, episode, quality }) => {
     console.log(`Searching ${title} ${quality}`)
-    const promise = animelayer.searchWithMagnet(normalizeTitle(title), { quality, episode })
+
+    const promise = adaptiveSearch(title, quality)
     try {
-      await Promise.race([
-        promise,
-        sleep(5000)
-      ])
+      await promise
     } catch (e) {
       console.error(e)
       throw e
