@@ -23,11 +23,13 @@ export default async function ({ media, episode }) {
   if (!entries.length && !movie) entries = await getToshoEntriesForMedia(media, aniDBEpisode, json)
   if (!entries?.length) throw new Error('No entries found.')
 
+  entries.push(...await IPC.invoke('al:search', { title: media.title.romaji, episode, quality: '1920x1080' }))
+
   const deduped = dedupeEntries(entries)
   const parseObjects = await anitomyscript(deduped.map(({ title }) => title))
   for (const i in parseObjects) deduped[i].parseObject = parseObjects[i]
 
-  const withBests = dedupeEntries([...await getSeedexBests(media), ...mapBestSneedexReleases(deduped), ...await IPC.invoke('al:search', { title: media.title.romaji, episode, quality: '1920x1080' })])
+  const withBests = dedupeEntries([...await getSeedexBests(media), ...mapBestSneedexReleases(deduped)])
 
   return updatePeerCounts(withBests)
 }
