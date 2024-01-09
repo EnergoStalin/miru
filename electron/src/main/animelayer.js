@@ -59,7 +59,7 @@ export function registerAnimeLayerApi () {
         downloads: entry.seed + entry.leech,
         hash: entry.hash,
         size: entry.size,
-        verified: true,
+        verified: false,
         batch: true,
         date: entry.date
       })
