@@ -200,8 +200,8 @@ importers:
   electron:
     dependencies:
       animelayerjs:
-        specifier: ^2.0.0
-        version: 2.0.0
+        specifier: ^2.1.1
+        version: 2.1.1
       utp-native:
         specifier: ^2.5.3
         version: 2.5.3
@@ -1860,12 +1860,11 @@ packages:
       require-from-string: 2.0.2
       uri-js: 4.4.1
 
-  /animelayerjs@2.0.0:
-    resolution: {integrity: sha512-KbZR/+3OfReWLdjDdiLhzA7Qh6oLkVfPZlyjvF2ZXMBmUEDsaW3MMvSkh0YvyHl4iHrkv9HsSfERkPYk3ju2pw==}
+  /animelayerjs@2.1.1:
+    resolution: {integrity: sha512-XVjfC5J83CrE2wk43MaPeGNR7l/1/zeV+Y4NDny9EiMVTEc9oPfDHw4iD0vHSQCI0Ll4/6GfVfEXZLfkSL73IA==}
     engines: {node: '>=20.0.0'}
     dependencies:
       cookie: 0.6.0
-      moment: 2.29.4
       node-html-parser: 6.1.11
       parse-torrent: 11.0.14
     dev: false
@@ -6177,10 +6176,6 @@ packages:
     resolution: {integrity: sha512-xV2bxeN6F7oYjZWTe/YPAy6MN2M+sL4u/Rlm2AHCIVGfo2p1yGmBHQ6vHehl4bRTZBdHu3TSkWdYgkwpYzAGSw==}
     engines: {node: '>=0.10.0'}
     dev: true
-
-  /moment@2.29.4:
-    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
-    dev: false
 
   /mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
