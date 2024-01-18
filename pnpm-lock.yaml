@@ -200,8 +200,8 @@ importers:
   electron:
     dependencies:
       animelayerjs:
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.1.2
+        version: 2.1.2
       utp-native:
         specifier: ^2.5.3
         version: 2.5.3
@@ -1860,8 +1860,8 @@ packages:
       require-from-string: 2.0.2
       uri-js: 4.4.1
 
-  /animelayerjs@2.1.1:
-    resolution: {integrity: sha512-XVjfC5J83CrE2wk43MaPeGNR7l/1/zeV+Y4NDny9EiMVTEc9oPfDHw4iD0vHSQCI0Ll4/6GfVfEXZLfkSL73IA==}
+  /animelayerjs@2.1.2:
+    resolution: {integrity: sha512-P2bmAx7YSmS7kg9Elr50sr9F3iyK7vuN+1ltlwNO2PQKXiLdtYj2RQRm00Wd+4VTFJAvywa2M067hcRzd66F9A==}
     engines: {node: '>=20.0.0'}
     dependencies:
       cookie: 0.6.0

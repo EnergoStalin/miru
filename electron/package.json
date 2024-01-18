@@ -25,7 +25,7 @@
     "webpack-merge": "^5.10.0"
   },
   "dependencies": {
-    "animelayerjs": "^2.1.1",
+    "animelayerjs": "^2.1.2",
     "utp-native": "^2.5.3"
   },
   "standard": {
@@ -82,7 +82,10 @@
     },
     "win": {
       "artifactName": "${os}-${name}-${version}.${ext}",
-      "target": ["nsis", "portable"]
+      "target": [
+        "nsis",
+        "portable"
+      ]
     },
     "linux": {
       "artifactName": "${os}-${name}-${version}.${ext}",
