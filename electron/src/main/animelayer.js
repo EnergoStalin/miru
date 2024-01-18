@@ -16,10 +16,12 @@ function normalizeTitle (name) {
 }
 
 async function searchWithTimeout (title, quality, episode, timeout) {
+  console.log(normalizeTitle(title), { quality, episode })
+
   const promise = animelayer.searchWithMagnet(normalizeTitle(title), { quality, episode })
   await Promise.race([
     promise,
-    timeouted(5000)
+    timeouted(timeout)
   ])
 
   return promise
@@ -36,8 +38,6 @@ async function adaptiveSearch (title, quality) {
 
 export function registerAnimeLayerApi () {
   ipcMain.handle('al:search', async (_, { title, episode, quality }) => {
-    console.log(`Searching ${title} ${quality}`)
-
     const promise = adaptiveSearch(title, quality)
     try {
       await promise
