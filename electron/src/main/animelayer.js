@@ -12,7 +12,7 @@ function timeouted (time) {
 }
 
 function normalizeTitle (name) {
-  return name.split(' ').filter(e => e.length < 12).join(' ').replace('-', ' ')
+  return name.replace(/[-,]/, ' ').split(' ').filter(e => e.length < 10).slice(0, 3).join(' ')
 }
 
 async function searchWithTimeout (title, quality, episode, timeout) {
@@ -32,7 +32,6 @@ async function adaptiveSearch (title, quality) {
   if (list.length) {
     return list
   }
-
   return searchWithTimeout(title, quality, 0, 5000)
 }
 
