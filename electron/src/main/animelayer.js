@@ -1,11 +1,11 @@
 import { AnimeLayer, Credentials } from 'animelayerjs'
 import { ipcMain } from 'electron'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { execSync } from 'node:child_process'
 
-const credentials = JSON.parse(readFileSync(join(process.env.HOME, '.animelayer.json')).toString('ascii'))
+const login = execSync('keepassxc-browser-cli get-login http://animelayer.ru/').toString('ascii').slice(0, -1)
+const password = execSync('keepassxc-browser-cli get-pw http://animelayer.ru/').toString('ascii').slice(0, -1)
 
-const animelayer = new AnimeLayer(new Credentials(credentials.login, credentials.password))
+const animelayer = new AnimeLayer(new Credentials(login, password))
 
 function timeouted (time) {
   return new Promise((resolve, reject) => setTimeout(reject, time))
