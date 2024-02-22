@@ -2,9 +2,14 @@ import { AnimeLayer, Credentials } from 'animelayerjs'
 import { ipcMain } from 'electron'
 import { execSync } from 'node:child_process'
 
-const credentials = JSON.parse(execSync('keepassxc-browser-cli get http://animelayer.ru/').toString('ascii').slice(0, -1))
+let credentials
+let animelayer
 
-const animelayer = new AnimeLayer(new Credentials(credentials.login, credentials.password))
+try {
+  credentials = JSON.parse(execSync('keepassxc-browser-cli get http://animelayer.ru/').toString('ascii').slice(0, -1))
+  animelayer = new AnimeLayer(new Credentials(credentials.login, credentials.password))
+} catch {}
+
 
 function timeouted (time) {
   return new Promise((resolve, reject) => setTimeout(reject, time))
@@ -36,6 +41,8 @@ async function adaptiveSearch (title, quality) {
 
 export function registerAnimeLayerApi () {
   ipcMain.handle('al:search', async (_, { title, episode, quality }) => {
+    if (!animelayer) return
+
     const promise = adaptiveSearch(title, quality)
     try {
       await promise
