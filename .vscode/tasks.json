@@ -34,7 +34,7 @@
         "cwd": "${workspaceFolder}/electron"
       },
       "linux": {
-        "command": "cp -f \"dist/linux-Miru-$(cat package.json | jq .version | tr -d \\\").AppImage\" \"${userHome}/bin/miru\""
+        "command": "cp -f \"dist/linux-Miru-$(cat package.json | jq -r .version).AppImage\" \"${userHome}/bin/miru\""
       },
       "presentation": {
         "reveal": "silent",
