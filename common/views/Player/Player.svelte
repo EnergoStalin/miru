@@ -1,9 +1,10 @@
 <script>
   import { settings } from '@/modules/settings.js'
+  import { getAnimeProgress, setAnimeProgress } from '@/modules/animeprogress.js'
   import { playAnime } from '../RSSView.svelte'
   import { client } from '@/modules/torrent.js'
   import { createEventDispatcher } from 'svelte'
-  import { alEntry } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/anilist.js'
   import Subtitles from '@/modules/subtitles.js'
   import { toTS, fastPrettyBytes, videoRx } from '@/modules/util.js'
   import { toast } from 'svelte-sonner'
@@ -173,6 +174,7 @@
       client.send('current', file)
       subs = new Subtitles(video, files, current, handleHeaders)
       video.load()
+      await loadAnimeProgress()
     }
   }
 
@@ -197,6 +199,25 @@
       hasLast = false
     }
   }
+
+  async function loadAnimeProgress () {
+    if (!current?.media?.media?.id || !current.media.media.episode || current.media.failed || !media?.media?.id || !media.episode) return
+
+    const animeProgress = await getAnimeProgress(current.media.media.id, current.media.episode)
+    if (!animeProgress) return
+
+    const currentTime = Math.max(animeProgress.currentTime - 5, 0) // Load 5 seconds before
+    seek(currentTime - video.currentTime)
+  }
+
+  function saveAnimeProgress () {
+    if (!current?.media?.media?.id || !current.media.media.episode || current.media.failed || !media?.media?.id || !media.episode) return
+
+    if (buffering || paused || video.readyState < 4) return
+
+    setAnimeProgress({ mediaId: current.media.media.id, episode: current.media.episode, currentTime: video.currentTime, safeduration })
+  }
+  setInterval(saveAnimeProgress, 30000)
 
   function cycleSubtitles () {
     if (current && subs?.headers) {
@@ -237,6 +258,7 @@
   }
   function playPause () {
     paused = !paused
+    resetImmerse()
   }
   function toggleMute () {
     muted = !muted
@@ -624,6 +646,7 @@
   }
 
   function toggleImmerse () {
+    clearTimeout(immerseTimeout)
     immersed = !immersed
   }
 
@@ -861,7 +884,7 @@
         if (media?.media?.episodes || media?.media?.nextAiringEpisode?.episode) {
           if (media.media.episodes || media.media.nextAiringEpisode?.episode > media.episode) {
             completed = true
-            alEntry(media)
+            anilistClient.alEntry(media)
           }
         }
       }
@@ -970,6 +993,7 @@
     on:loadedmetadata={autoPlay}
     on:loadedmetadata={checkAudio}
     on:loadedmetadata={clearLoadInterval}
+    on:loadedmetadata={loadAnimeProgress}
     on:leavepictureinpicture={() => { pip = false }} />
   {#if stats}
     <div class='position-absolute top-0 bg-tp p-10 m-15 text-monospace rounded z-50'>

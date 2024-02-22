@@ -2,8 +2,10 @@
 .DS_Store
 
 # Build output
-dist/
-build/
+**/dist/
+**/build/
+**/public/
+**/android/
 
 # Dependencies
 node_modules
@@ -12,6 +14,7 @@ node_modules
 **/*.keystore
 **/*.jks
 **/node_modules
+**/git_modules/
 
 package-lock.json
 

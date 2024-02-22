@@ -1,11 +1,15 @@
 <script>
   import { formatMap, setStatus, playMedia } from '@/modules/anime.js'
-  import { alRequest } from '@/modules/anilist.js'
+  import { anilistClient } from '@/modules/anilist.js'
   import { click } from '@/modules/click.js'
+  /** @type {import('@/modules/al.d.ts').Media} */
   export let media
 
   let hide = true
 
+  /**
+   * @param {import('@/modules/al.d.ts').Media} media
+   */
   function getPlayButtonText (media) {
     if (media.mediaListEntry) {
       const { status, progress } = media.mediaListEntry
@@ -27,18 +31,12 @@
       media.mediaListEntry = res.data.SaveMediaListEntry
     } else {
       // delete
-      alRequest({
-        method: 'Delete',
-        id: media.mediaListEntry.id
-      })
+      anilistClient.delete({ id: media.mediaListEntry.id })
       media.mediaListEntry = undefined
     }
   }
   function toggleFavourite () {
-    alRequest({
-      method: 'Favourite',
-      id: media.id
-    })
+    anilistClient.favourite({ id: media.id })
     media.isFavourite = !media.isFavourite
   }
   function play () {
