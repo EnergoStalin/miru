@@ -65,15 +65,15 @@ function createSections () {
     ...settings.value.rssFeedsNew.map(([title, url]) => {
       const section = {
         title,
-        load: (page = 1, perPage = 8) => RSSManager.getMediaForRSS(page, perPage, url),
-        preview: writable(RSSManager.getMediaForRSS(1, 8, url)),
+        load: (page = 1, perPage = 12) => RSSManager.getMediaForRSS(page, perPage, url),
+        preview: writable(RSSManager.getMediaForRSS(1, 12, url)),
         variables: { disableSearch: true }
       }
 
       // update every 30 seconds
       section.interval = setInterval(async () => {
-        if (await RSSManager.getContentChanged(1, 8, url)) {
-          section.preview.value = RSSManager.getMediaForRSS(1, 8, url, true)
+        if (await RSSManager.getContentChanged(1, 12, url)) {
+          section.preview.value = RSSManager.getMediaForRSS(1, 12, url, true)
         }
       }, 30000)
 
@@ -91,6 +91,7 @@ function createSections () {
             if (media.status === 'FINISHED') return true
             return media.mediaListEntry?.progress < media.nextAiringEpisode?.episode - 1
           }).map(({ media }) => media.id)
+          if (!ids.length) return {}
           return anilistClient.searchIDS({ page, perPage, id: ids, ...SectionsManager.sanitiseObject(variables) })
         })
         return SectionsManager.wrapResponse(res, perPage)
@@ -106,6 +107,7 @@ function createSections () {
           const ids = mediaList.flatMap(({ media }) => {
             return media.relations.edges.filter(edge => edge.relationType === 'SEQUEL')
           }).map(({ node }) => node.id)
+          if (!ids.length) return {}
           return anilistClient.searchIDS({ page, perPage, id: ids, ...SectionsManager.sanitiseObject(variables), status: ['FINISHED', 'RELEASING'], onList: false })
         })
         return SectionsManager.wrapResponse(res, perPage)

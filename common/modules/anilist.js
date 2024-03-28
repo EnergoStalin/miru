@@ -178,6 +178,7 @@ class AnilistClient {
 
   rateLimitPromise = null
 
+  /** @type {import('simple-store-svelte').Writable<ReturnType<AnilistClient['getUserLists']>>} */
   userLists = writable()
 
   userID
@@ -246,7 +247,7 @@ class AnilistClient {
 
   /**
    * @param {string} query
-   * @param {object} variables
+   * @param {Record<string, any>} variables
    */
   alRequest (query, variables) {
     const options = {
@@ -256,7 +257,7 @@ class AnilistClient {
         Accept: 'application/json'
       },
       body: JSON.stringify({
-        query: query.replace(/\s/g, ''),
+        query: query.replace(/\s/g, '').replaceAll('&nbsp;', ' '),
         variables: {
           sort: 'TRENDING_DESC',
           page: 1,
@@ -276,6 +277,65 @@ class AnilistClient {
     const media = res.data.Page.media.map(media => getDistanceFromTitle(media, method.name))
     if (!media.length) return null
     return media.reduce((prev, curr) => prev.lavenshtein <= curr.lavenshtein ? prev : curr)
+  }
+
+  /**
+   * @param {{key: string, title: string, year?: string, isAdult: boolean}[]} flattenedTitles
+   **/
+  async alSearchCompound (flattenedTitles) {
+    if (!flattenedTitles.length) return []
+    /** @type {Record<`v${number}`, string>} */
+    const requestVariables = flattenedTitles.reduce((obj, { title, isAdult }, i) => {
+      if (isAdult) return obj
+      obj[`v${i}`] = title
+      return obj
+    }, {})
+
+    const queryVariables = flattenedTitles.reduce((arr, { isAdult }, i) => {
+      if (isAdult) return arr
+      arr.push(`$v${i}: String`)
+      return arr
+    }, []).join(', ')
+    const fragmentQueries = flattenedTitles.map(({ year, isAdult }, i) => /* js */`
+    v${i}: Page(perPage: 10) {
+      media(type: ANIME, search: $v${isAdult ? i - 1 : i}, status_in: [RELEASING, FINISHED], isAdult: ${!!isAdult} ${year ? `, seasonYear: ${year}` : ''}) {
+        ...med
+      }
+    }`)
+
+    const query = /* js */`
+    query(${queryVariables}){
+      ${fragmentQueries}
+    }
+    
+    fragment&nbsp;med&nbsp;on&nbsp;Media {
+      id,
+      title {
+        romaji,
+        english,
+        native
+      },
+      synonyms
+    }`
+
+    /**
+     * @type {import('./al.d.ts').Query<Record<string, {media: import('./al.d.ts').Media[]}>>}
+     * @returns {Promise<[string, import('./al.d.ts').Media][]>}
+     * */
+    const res = await this.alRequest(query, requestVariables)
+
+    /** @type {Record<string, number>} */
+    const searchResults = {}
+    for (const [variableName, { media }] of Object.entries(res.data)) {
+      if (!media.length) continue
+      const titleObject = flattenedTitles[Number(variableName.slice(1))]
+      if (searchResults[titleObject.key]) continue
+      searchResults[titleObject.key] = media.map(media => getDistanceFromTitle(media, titleObject.title)).reduce((prev, curr) => prev.lavenshtein <= curr.lavenshtein ? prev : curr).id
+    }
+
+    const ids = Object.values(searchResults)
+    const search = await this.searchIDS({ id: ids, perPage: 50 })
+    return Object.entries(searchResults).map(([filename, id]) => [filename, search.data.Page.media.find(media => media.id === id)])
   }
 
   async alEntry (filemedia) {

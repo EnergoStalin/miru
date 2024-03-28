@@ -25,6 +25,18 @@ const ranges = {
   seconds: 1
 }
 
+/**
+ * @template T
+ * @param {T[]} arr
+ * @param {number} n
+ */
+export function * chunks (arr, n) {
+  for (let i = 0; i < arr.length; i += n) {
+    yield arr.slice(i, i + n)
+  }
+}
+
+/** @param {Date} date */
 export function since (date) {
   const secondsElapsed = (date.getTime() - Date.now()) / 1000
   for (const key in ranges) {
@@ -44,9 +56,7 @@ export function fastPrettyBytes (num) {
   return Number((num / Math.pow(1000, exponent)).toFixed(2)) + units[exponent]
 }
 
-/**
- * @type {DOMParser['parseFromString']}
- */
+/** @type {DOMParser['parseFromString']} */
 export const DOMPARSER = (typeof DOMParser !== 'undefined') && DOMParser.prototype.parseFromString.bind(new DOMParser())
 
 export const sleep = t => new Promise(resolve => setTimeout(resolve, t).unref?.())
@@ -65,30 +75,14 @@ export function toTS (sec, full) {
     }
   }
   const hours = Math.floor(sec / 3600)
-  /**
-   * @type {any}
-   */
+  /** @type {any} */
   let minutes = Math.floor(sec / 60) - hours * 60
-  /**
-   * @type {any}
-   */
+  /** @type {any} */
   let seconds = full === 1 ? (sec % 60).toFixed(2) : Math.floor(sec % 60)
   if (minutes < 10 && (hours > 0 || full)) minutes = '0' + minutes
   if (seconds < 10) seconds = '0' + seconds
   return (hours > 0 || full === 1 || full === 2) ? hours + ':' + minutes + ':' + seconds : minutes + ':' + seconds
 }
-
-export async function PromiseBatch (task, items, batchSize) {
-  let position = 0
-  let results = []
-  while (position < items.length) {
-    const itemsForBatch = items.slice(position, position + batchSize)
-    results = [...results, ...await Promise.all(itemsForBatch.map(item => task(item)))]
-    position += batchSize
-  }
-  return results
-}
-
 export function generateRandomHexCode (len) {
   let hexCode = ''
 
@@ -124,25 +118,6 @@ export function debounce (fn, time) {
     timeout = setTimeout(later, time)
     timeout.unref?.()
   }
-}
-
-export function binarySearch (arr, el) {
-  let left = 0
-  let right = arr.length - 1
-
-  while (left <= right) {
-    // Using bitwise or instead of Math.floor as it is slightly faster
-    const mid = ((right + left) / 2) | 0
-    if (arr[mid] === el) {
-      return true
-    } else if (el < arr[mid]) {
-      right = mid - 1
-    } else {
-      left = mid + 1
-    }
-  }
-
-  return false
 }
 
 export const defaults = {
