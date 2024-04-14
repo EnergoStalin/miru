@@ -386,7 +386,7 @@
       context.drawImage(video, 0, 0)
       if (subs?.renderer) {
         subs.renderer.resize(video.videoWidth, video.videoHeight)
-        await new Promise(resolve => setTimeout(resolve, 1000)) // this is hacky, but TLDR wait for canvas to update and re-render, in practice this will take at MOST 100ms, but just to be safe
+        await new Promise(resolve => setTimeout(resolve, 500)) // this is hacky, but TLDR wait for canvas to update and re-render, in practice this will take at MOST 100ms, but just to be safe
         context.drawImage(subs.renderer._canvas, 0, 0, canvas.width, canvas.height)
         subs.renderer.resize(0, 0, 0, 0) // undo resize
       }
@@ -439,7 +439,10 @@
             if (pip) {
               canvasVideo.requestPictureInPicture().then(pipwindow => {
                 pipwindow.onresize = () => {
-                  subs.renderer.resize(pipwindow.width, pipwindow.height)
+                  const { width, height } = pipwindow
+                  if (isNaN(width) || isNaN(height)) return
+                  if (!isFinite(width) || !isFinite(height)) return
+                  subs.renderer.resize(width, height)
                 }
               }).catch(e => {
                 cleanup()
@@ -460,66 +463,87 @@
     KeyX: {
       fn: () => screenshot(),
       id: 'screenshot_monitor',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Save Screenshot to Clipboard'
     },
     KeyI: {
       fn: () => toggleStats(),
       id: 'list',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Toggle Stats'
     },
     Backquote: {
       fn: () => (showKeybinds = !showKeybinds),
       id: 'help_outline',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Toggle Keybinds'
     },
     Space: {
       fn: () => playPause(),
       id: 'play_arrow',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Play/Pause'
     },
     KeyN: {
       fn: () => playNext(),
       id: 'skip_next',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Next Episode'
     },
     KeyB: {
       fn: () => playLast(),
       id: 'skip_previous',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Previous Episode'
+    },
+    KeyA: {
+      fn: () => {
+        $settings.playerDeband = !$settings.playerDeband
+      },
+      id: 'deblur',
+      type: 'icon',
+      desc: 'Toggle Video Debanding'
     },
     KeyM: {
       fn: () => (muted = !muted),
       id: 'volume_off',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Toggle Mute'
     },
     KeyP: {
       fn: () => togglePopout(),
       id: 'picture_in_picture',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Toggle Picture in Picture'
     },
     KeyF: {
       fn: () => toggleFullscreen(),
       id: 'fullscreen',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Toggle Fullscreen'
     },
     KeyS: {
       fn: () => skip(),
-      id: '+90'
+      id: '+90',
+      desc: 'Skip Intro/90s'
     },
     KeyW: {
       fn: () => { fitWidth = !fitWidth },
       id: 'fit_width',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Toggle Video Cover'
     },
     KeyD: {
       fn: () => toggleCast(),
       id: 'cast',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Toggle Cast [broken]'
     },
     KeyC: {
       fn: () => cycleSubtitles(),
       id: 'subtitles',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Cycle Subtitles'
     },
     ArrowLeft: {
       fn: e => {
@@ -527,7 +551,8 @@
         e.preventDefault()
         rewind()
       },
-      id: '-2'
+      id: '-2',
+      desc: 'Rewind 2s'
     },
     ArrowRight: {
       fn: e => {
@@ -535,7 +560,8 @@
         e.preventDefault()
         forward()
       },
-      id: '+2'
+      id: '+2',
+      desc: 'Seek 2s'
     },
     ArrowUp: {
       fn: e => {
@@ -544,7 +570,8 @@
         volume = Math.min(1, volume + 0.05)
       },
       id: 'volume_up',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Volume Up'
     },
     ArrowDown: {
       fn: e => {
@@ -553,22 +580,26 @@
         volume = Math.max(0, volume - 0.05)
       },
       id: 'volume_down',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Volume Down'
     },
     BracketLeft: {
       fn: () => { playbackRate = video.defaultPlaybackRate -= 0.1 },
       id: 'history',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Decrease Playback Rate'
     },
     BracketRight: {
       fn: () => { playbackRate = video.defaultPlaybackRate += 0.1 },
       id: 'update',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Increase Playback Rate'
     },
     Backslash: {
       fn: () => { playbackRate = video.defaultPlaybackRate = 1 },
       id: 'schedule',
-      type: 'icon'
+      type: 'icon',
+      desc: 'Reset Playback Rate'
     }
   })
 
@@ -580,7 +611,7 @@
     canvas.height = video.videoHeight
     if (!noSubs) subs.renderer.resize(video.videoWidth, video.videoHeight)
     const renderFrame = () => {
-      context.drawImage(video, 0, 0)
+      context.drawImage(deband ? deband.canvas : video, 0, 0)
       if (!noSubs) context.drawImage(subs.renderer?._canvas, 0, 0, canvas.width, canvas.height)
       loop = video.requestVideoFrameCallback(renderFrame)
     }
@@ -964,6 +995,7 @@
   class:pip
   class:immersed={immersed}
   class:buffering={src && buffering}
+  class:fitWidth
   bind:this={container}
   role='none'
   on:pointermove={resetImmerse}
@@ -973,7 +1005,7 @@
   {#if showKeybinds && !miniplayer}
     <div class='position-absolute bg-tp w-full h-full z-50 font-size-12 p-20 d-flex align-items-center justify-content-center pointer' on:pointerup|self={() => (showKeybinds = false)} tabindex='-1' role='button'>
       <Keybinds let:prop={item} autosave={true} clickable={true}>
-        <div class:material-symbols-outlined={item?.type} class='bind'>{item?.id || ''}</div>
+        <div class:material-symbols-outlined={item?.type} class='bind' title={item?.desc} style='pointer-events: all !important;'>{item?.id || ''}</div>
       </Keybinds>
     </div>
   {/if}
@@ -981,7 +1013,6 @@
   <video
     crossorigin='anonymous'
     class='position-absolute h-full w-full'
-    class:fitWidth
     style={`margin-top: ${menubarOffset}px`}
     preload='auto'
     {src}
@@ -1183,8 +1214,8 @@
   :global(.deband-canvas) ~ video {
     opacity: 0;
   }
-  .fitWidth {
-    object-fit: cover;
+  .fitWidth video, .fitWidth :global(.deband-canvas) {
+    object-fit: cover !important;
   }
   .custom-range {
     color: var(--accent-color);
